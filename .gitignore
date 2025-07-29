@@ -15,3 +15,4 @@ misc/test_images/*
 public/node_modules
 coverage
 yarn-error.log
+database/config/config-actual.js
