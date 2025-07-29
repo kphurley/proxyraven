@@ -9,15 +9,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/axmccx/proxynexus.git"
+    "url": "git+https://github.com/kphurley/agotproxy.git"
   },
   "keywords": [],
   "author": "Alex McCulloch",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/axmccx/proxynexus/issues"
+    "url": "https://github.com/kphurley/agotproxy/issues"
   },
-  "homepage": "https://github.com/axmccx/proxynexus#readme",
+  "homepage": "https://github.com/kphurley/agotproxy#readme",
   "dependencies": {
     "@babel/core": "^7.0.0",
     "@babel/plugin-proposal-object-rest-spread": "^7.0.0",
