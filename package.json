@@ -1,23 +1,24 @@
 {
-  "name": "proxynexus",
-  "version": "2.0.0",
-  "description": "Make high quality Netrunner proxies.",
+  "name": "proxyraven",
+  "version": "0.0.1",
+  "description": "Make high quality Game of Thrones LCG 2.0 proxies.",
   "main": "server.js",
   "scripts": {
     "start": "nf start",
-    "lint": "eslint --ignore-path .gitignore ."
+    "lint": "eslint --ignore-path .gitignore .",
+    "test": "vitest"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kphurley/agotproxy.git"
+    "url": "git+https://github.com/kphurley/proxyraven.git"
   },
   "keywords": [],
-  "author": "Alex McCulloch",
+  "author": "Kevin Hurley",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/kphurley/agotproxy/issues"
+    "url": "https://github.com/kphurley/proxyraven/issues"
   },
-  "homepage": "https://github.com/kphurley/agotproxy#readme",
+  "homepage": "https://github.com/kphurley/proxyraven#readme",
   "dependencies": {
     "@babel/core": "^7.0.0",
     "@babel/plugin-proposal-object-rest-spread": "^7.0.0",
@@ -48,7 +49,8 @@
   "devDependencies": {
     "eslint": "^7.24.0",
     "eslint-config-airbnb-base": "^14.2.1",
-    "eslint-plugin-import": "^2.22.1"
+    "eslint-plugin-import": "^2.22.1",
+    "vitest": "^3.2.4"
   },
   "engines": {
     "node": "14.x"

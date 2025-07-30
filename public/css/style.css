@@ -1,8 +1,14 @@
 .navbar-brand {
-  color: #ffffff;
   font-size: 2.25rem;
   padding-top: 0;
   padding-bottom: 0;
+}
+
+.navbar-brand-logo {
+  width: 50px;
+  height: auto;
+  margin-left: 10px;
+  margin-right: 10px;
 }
 
 .toast {
@@ -61,6 +67,12 @@ img.cardFallback{
   height: 7.92cm;
   vertical-align: top;
   border: 2px solid #ff0000;
+}
+
+img.rotateLeft {
+  transform: rotate(-90deg) translate(-42px, -41px);
+  width: 7.92cm;
+  height: 5.715cm;
 }
 
 #niseiCardNotice {
