@@ -392,8 +392,10 @@ class CardManager {
   getCardList() {
     return this.cardIdOrder.map((id) => ({
       code: this.cards[id].code,
-      source: this.cards[id].scanSource,
-      side: this.cards[id].side,
+      url: this.cards[id].frontPrev,
+      isPlot: this.cards[id].typeCode === 'plot',
+      // source: this.cards[id].scanSource,
+      // side: this.cards[id].side,
     }));
   }
 }
@@ -543,7 +545,8 @@ function assignEvents() {
         PdfPageSize: settings.PdfPageSize,
         LmMpcPlacement: settings.LmMpcPlacement,
         fullCutLines: (settings.fullCutLines === 'true'),
-        includeCardBacks: (settings.includeCardBacks === 'true'),
+        includeCardBacks: false,
+        // includeCardBacks: (settings.includeCardBacks === 'true'),
       };
       postData('/api/generate', generateSettings)
         .then(() => {
