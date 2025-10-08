@@ -245,7 +245,7 @@ export const generate = async (req, res) => {
       generate_type: generateType,
       selected_tab: selectedTab,
       request_text: requestText,
-      card_list: cardList.map((c) => (`${c.code}-${c.source}`)),
+      card_list: cardList.map((c) => (`${c.code}-${c.url}`)),
       hash: '',
       filepath: '',
       is_download_available: false,

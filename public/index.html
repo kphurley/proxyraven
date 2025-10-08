@@ -154,6 +154,9 @@
                         <div class="form-check form-check">
                             <input class="form-check-input" type="radio" name="generationType" id="mpcRadio" value="mpc">
                             <label class="form-check-label" for="mpcRadio">MakePlayingCards</label>
+                            <div>NOTE - the MPC functionality is</div>
+                            <div>half-baked and not recommended.</div>
+                            <div>Use at your own risk!</div>
                         </div>
                         <br>
                         <button type="button" id="generateBtn" class="btn btn-danger">Generate Proxies</button>
@@ -165,12 +168,8 @@
                     </div>
                 </div>
                 <div id="progressStatus" class="statusMsg"></div>
-                <div id="niseiCardNotice" class="card border-light" style="display: none">
-                    <div class="card-body">
-                        NISEI cards are excluded from MPC requests.
-                    </div>
-                </div>
-                <div id="issueMsg" class="card border-light" style="display: none">
+                
+                <!-- <div id="issueMsg" class="card border-light" style="display: none">
                     <div class="card-body">
                         <p>
                             If you find any issues with the card scans, please <a href="https://github.com/axmccx/proxynexus/issues/new" target="_blank" rel="noopener">open an issue on github</a> to let us know!
@@ -179,7 +178,7 @@
                             If you found this site useful, please consider <a href="https://www.paypal.me/proxynexus" target="_blank" rel="noopener">making a donation</a> to support this project.
                         </p>
                     </div>
-                </div>
+                </div> -->
                 <ul class="list-group show mt-3" id="altArtSelector"></ul>
                 <br/>
             </div>
