@@ -271,7 +271,7 @@ class CardManager {
   updateCardListFromTextArea(cardListText) {
     const input = cardListText.split(/\n/).filter((e) => (e !== ''));
     const cardInputRegex = /([0-9] |[0-9]x )?(.*)/;
-    const cardTitles = Object.values(this.cards).map((c) => c.label);
+    const cardTitles = Object.values(this.cards).map((c) => c.title);
     const newCardTitles = [];
     const unfoundCards = [];
     let unfoundCount = 0;
