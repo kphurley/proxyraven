@@ -1,16 +1,24 @@
+const fs = require('fs');
 const throng = require('throng');
 const Queue = require('bull');
 const crypto = require('crypto');
-//const path = require('path');
-//const azureStorage = require('azure-storage');
+const { PutObjectCommand, S3 } = require('@aws-sdk/client-s3');
 const { generatePdf, generateMpc } = require('./generators');
 const { request } = require('./database/models');
 
 const REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
 const workers = process.env.WEB_CONCURRENCY || 1;
 const maxJobsPerWorker = 1;
-// const blobService = azureStorage.createBlobService();
-// const containerName = process.env.AZURE_RESULTS_CONTAINER_NAME;
+
+const s3Client = new S3({
+  forcePathStyle: false,
+  endpoint: 'https://nyc3.digitaloceanspaces.com',
+  region: 'us-east-1',
+  credentials: {
+    accessKeyId: process.env.SPACES_KEY,
+    secretAccessKey: process.env.SPACES_SECRET,
+  },
+});
 
 async function cachedCopyExists(hash) {
   return request.count({ where: { hash, is_download_available: true } })
@@ -54,15 +62,18 @@ function start() {
     let result;
     let generateFunc;
     let fileExtension;
+    let contentType;
     const hash = getHash(job.data);
     console.log(`Starting request with hash ${hash}`);
 
     if (job.data.generateType === 'pdf') {
       generateFunc = generatePdf;
       fileExtension = '.pdf';
+      contentType = 'application/pdf';
     } else if (job.data.generateType === 'mpc') {
       generateFunc = generateMpc;
       fileExtension = '.zip';
+      contentType = 'application/zip';
     }
 
     if (await cachedCopyExists(hash)) {
@@ -77,21 +88,24 @@ function start() {
       done(null, result);
     } else {
       result = await generateFunc(job, hash);
-      // console.log('Uploading file to Azure...');
-      // job.log('Uploading file to Azure...');
+      console.log('Uploading file to Spaces...');
+      job.log('Uploading file to Spaces...');
       job.progress(95);
-      done(null, result);
-      // blobService.createBlockBlobFromLocalFile(
-      //   containerName,
-      //   path.basename(result.filepath),
-      //   result.filepath,
-      //   (err) => {
-      //     if (err) {
-      //       console.log('Azure upload error!!!');
-      //     }
-      //     done(null, result);
-      //   },
-      // );
+
+      const fileStream = fs.createReadStream(result.filepath);
+
+      const params = {
+        Bucket: 'raven-cdn',
+        Key: `files/${hash}${fileExtension}`,
+        Body: fileStream,
+        ACL: 'public-read',
+        ContentType: contentType,
+      };
+
+      const command = new PutObjectCommand(params);
+      const data = await s3Client.send(command);
+
+      done(null, { ...result, s3Response: data });
     }
   });
 }

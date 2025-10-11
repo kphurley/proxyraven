@@ -17,3 +17,4 @@ coverage
 yarn-error.log
 database/config/config-actual.js
 .DS_Store
+tmp/

@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/kphurley/proxyraven#readme",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.908.0",
     "@babel/core": "^7.0.0",
     "@babel/plugin-proposal-object-rest-spread": "^7.0.0",
     "@babel/plugin-transform-runtime": "^7.4.4",
