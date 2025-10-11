@@ -9,7 +9,7 @@ import { successResponse, errorResponse, t2key } from '../helpers';
 
 const REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
 const workQueue = new Queue('work', REDIS_URL);
-const RESULTS_BASE_DIR = `${process.env.AZURE_BASE_BLOB_URL}/${process.env.AZURE_RESULTS_CONTAINER_NAME}/`;
+const RESULTS_BASE_DIR = `${process.env.SPACES_URL}/files/`;
 
 let sessionID = 0;
 const connections = {};

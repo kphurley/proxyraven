@@ -10,7 +10,7 @@ const TEMP_IMG_PATH = './tmp/images/';
 
 // This is where we need to grab the high quality images from for downloading
 // This should be somewhere in Digital Ocean instead of Azure
-const IMAGE_BASE_DIR = `${process.env.AZURE_BASE_BLOB_URL}/${process.env.AZURE_IMAGES_CONTAINER_NAME}/`;
+const IMAGE_BASE_DIR = `${process.env.SPACES_URL}/`;
 
 function cmToPt(cm) {
   return cm * 28.3464566929134;
