@@ -279,12 +279,22 @@ class CardManager {
     input.forEach((entry) => {
       const match = cardInputRegex.exec(entry);
       const count = (match[1] === undefined) ? 1 : parseInt(match[1], 10);
-      //const cardKey = t2key(match[2]);
       const cardKey = match[2];
+
+      // This will remove any parenthetical text at the end of the card title
+      // This is necessary because the ThronesDB export includes the set code in the exported text
+      const strippedCardKey = cardKey.replace(/\s*\([^)]*\)\s*$/, '').trim();
 
       if (cardKey in cardTitleDB) {
         for (let i = 0; i < count; i += 1) {
           const cardTitle = cardTitleDB[cardKey].label;
+          newCardTitles.push(cardTitle);
+        }
+      } else if (strippedCardKey in cardTitleDB) {
+        // This check catches cases where the user has included the set code in parentheses
+        // For example for ThronesDB copy/paste: "A Noble Cause (Core)" should match "A Noble Cause"
+        for (let i = 0; i < count; i += 1) {
+          const cardTitle = cardTitleDB[strippedCardKey].label;
           newCardTitles.push(cardTitle);
         }
       } else {
@@ -474,16 +484,6 @@ function selectTab(tabLabel) {
   }
 }
 
-function containsNISEICards(cardList) {
-  for (let i = 0; i < cardList.length; i += 1) {
-    const entry = cardList[i];
-    if (parseInt(entry.code.substring(0, 2), 10) >= 26) {
-      return true;
-    }
-  }
-  return false;
-}
-
 function assignEvents() {
   cardListTextArea.addEventListener('input', (e) => {
     // Hack to prevent extra cards from appearing due to pressing enter
@@ -555,9 +555,6 @@ function assignEvents() {
           document.getElementById('generateBtn').disabled = true;
           document.getElementById('progressBar').display = 'block';
           document.getElementById('issueMsg').style.display = 'block';
-          if (containsNISEICards(generateSettings.cardList) && generateSettings.generateType === 'mpc') {
-            document.getElementById('niseiCardNotice').style.display = 'block';
-          }
         })
         .catch((err) => {
           console.log(err.message);
