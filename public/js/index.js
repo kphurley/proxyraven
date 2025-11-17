@@ -18,8 +18,8 @@ let selectedTab = 'Card List';
 let isGeneratingProxies = false;
 
 const IMAGE_BASE_DIR = 'https://proxynexus.blob.core.windows.net/version2/';
-const NRDB_API_DIR = 'https://netrunnerdb.com/api/2.0/public/';
-const NRDB_CARD_DIR = 'https://netrunnerdb.com/en/card/';
+const THRONESDB_API_DIR = 'https://thronesdb.com/api/2.0/public/';
+const THRONESDB_CARD_DIR = 'https://thronesdb.com/card/';
 
 // function t2key(t) {
 //   return t.trim().toLowerCase().replace(/:/g, '').replace(new RegExp(' ', 'g'), '__');
@@ -139,21 +139,10 @@ class Card {
       imgClass += ' rotateLeft';
     }
     const frontImgURL = `${this.frontPrev}`;
-    newHtml += `<a href="${NRDB_CARD_DIR}${this.code}" title="" target="NetrunnerCard">`;
+    newHtml += `<a href="${THRONESDB_CARD_DIR}${this.code}" title="" target="NetrunnerCard">`;
     newHtml += `<img class="${imgClass}" id="previewCard${this.id}" src="${frontImgURL}" alt="${this.code}" />`;
     newHtml += `<span class="label">${this.code} ${this.title}</span>`;
     newHtml += '</a>';
-    // let backImgURL = '';
-    // let backImgStyle = 'display: none;';
-    // if (this.backPrev !== '' && settings.includeCardBacks === 'true') {
-    //   backImgURL = `${IMAGE_BASE_DIR}${this.backPrev}`;
-    //   backImgStyle = '';
-    // }
-
-    // newHtml += `<a id="previewCardBack${this.id}" style="${backImgStyle}" href="${NRDB_CARD_DIR}${this.code}" title="" target="NetrunnerCard">`;
-    // newHtml += `<img class="${imgClass}" id="previewCardBackImg${this.id}" src="${backImgURL}" alt="${this.code}back"/>`;
-    // newHtml += `<span class="label">${this.code} ${this.title}</span>`;
-    // newHtml += '</a>';
 
     return newHtml;
   }
@@ -242,7 +231,6 @@ class CardManager {
     this.cardIdOrder.forEach((id) => {
       const card = this.cards[id];
       previewHtml += card.getPreviewHTML();
-      //altArtSelectorHtml += card.getAltArtSelectorHTML();
     });
     if (unfoundCount > 0) {
       let unfoundHtml = '<div><p>Entries not found:</p><ul>';
@@ -257,15 +245,6 @@ class CardManager {
       altArtSelectorHtml = `<h6>Alt Arts</h6>${altArtSelectorHtml}`;
     }
     this.altArtSelector.innerHTML = altArtSelectorHtml;
-    // this.cardIdOrder.forEach((id) => {
-    //   const card = this.cards[id];
-    //   if (card.altArts.length > 1) {
-    //     const events = card.getAltArtSelectorEvents();
-    //     document.getElementById(`cycleLeft${card.id}`).addEventListener('click', events.left);
-    //     document.getElementById(`cycleRight${card.id}`).addEventListener('click', events.right);
-    //     document.getElementById(`altArtSelect${card.id}`).addEventListener('input', events.select);
-    //   }
-    // });
   }
 
   updateCardListFromTextArea(cardListText) {
@@ -339,7 +318,7 @@ class CardManager {
   setCardList(newCards) {
     this.cards = {};
     this.cardIdOrder = [];
-    //let count = 0;
+
     newCards.forEach((card) => {
       // Not sure how to deal with quantities yet, so just add one of each card
       // for (let j = 0; j < card.quantity; j += 1) {
@@ -390,7 +369,7 @@ class CardManager {
     }
 
     if (deckId) {
-      fetchJson(`${NRDB_API_DIR}${apiOption}${deckId}`)
+      fetchJson(`${THRONESDB_API_DIR}${apiOption}${deckId}`)
         .then((res) => {
           const newCards = Object.entries(res.data[0].cards)
             .map(([code, quantity]) => ({ code, quantity }));
