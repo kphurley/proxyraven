@@ -1,29 +1,23 @@
-// eslint-disable-next-line max-classes-per-file,import/extensions
+// eslint-disable-next-line import/extensions
 import { loadSettings, fetchJson } from './helpers.js';
 
-// eslint-disable-next-line max-classes-per-file,import/extensions
+// eslint-disable-next-line import/extensions
 import { adaptCardListToCardTitleDB, adaptCardListToCardCodeDB, adaptCardListToPackList } from './adaptors.js';
 
-let cardTitleDB;
-let cardCodeDB;
-let packList;
+// eslint-disable-next-line import/extensions
+import CardManager from './cards/CardManager.js';
+
+// eslint-disable-next-line import/extensions
+import { setGlobals, getGlobals } from './globals.js';
+
 let cardListTextArea;
 let setSelection;
 let deckURLText;
 let cardManager;
-let settings;
 let sessionID = 0;
 let playsetSelection;
 let selectedTab = 'Card List';
 let isGeneratingProxies = false;
-
-const IMAGE_BASE_DIR = 'https://proxynexus.blob.core.windows.net/version2/';
-const NRDB_API_DIR = 'https://netrunnerdb.com/api/2.0/public/';
-const NRDB_CARD_DIR = 'https://netrunnerdb.com/en/card/';
-
-// function t2key(t) {
-//   return t.trim().toLowerCase().replace(/:/g, '').replace(new RegExp(' ', 'g'), '__');
-// }
 
 async function postData(url, data) {
   const response = await fetch(url, {
@@ -40,377 +34,9 @@ async function postData(url, data) {
   return response.json();
 }
 
-class Card {
-  constructor(code, id) {
-    this.code = code;
-    this.id = id;
-    this.cardFromDB = cardCodeDB[this.code];
-    this.title = this.cardFromDB.label;
-    this.typeCode = this.cardFromDB.type_code;
-    const scanSourcePrioritiesLists = {
-      pt: ['pt', 'lm', 'de'],
-      lm: ['lm', 'pt', 'de'],
-      de: ['de', 'pt', 'lm'],
-    };
-    this.sourcePriorities = scanSourcePrioritiesLists[settings.scanSourcePriority];
-    // const cardCodes = cardTitleDB[this.title].codes;
-    // this.altArts = this.sourcePriorities.reduce((acc, source) => {
-    //   const tempAcc = [];
-    //   cardCodes.forEach((altCode) => {
-    //     const altCard = cardCodeDB[altCode];
-    //     if (altCard.availableSources.includes(source)) {
-    //       tempAcc.push({ code: altCode, source });
-    //     }
-    //   });
-    //   // move alt arts to the end of tempAcc
-    //   const cardsAcc = [];
-    //   const altAcc = [];
-    //   tempAcc.forEach((entry) => {
-    //     if (entry.code.includes('alt')) {
-    //       altAcc.push(entry);
-    //     } else {
-    //       cardsAcc.push(entry);
-    //     }
-    //   });
-    //   acc.push(...cardsAcc, ...altAcc);
-    //   return acc;
-    // }, []);
-
-    // Confirm that the current card code file is available for the primary scan source
-    // let foundCard = false;
-    // for (let i = 0; i < this.altArts.length; i += 1) {
-    //   const entry = this.altArts[i];
-    //   if (entry.code === this.code && entry.source === this.sourcePriorities[0]) {
-    //     foundCard = true;
-    //     [this.scanSource] = this.sourcePriorities;
-    //     break;
-    //   }
-    // }
-
-    // Use first alt art if current card code isn't found
-    // if (!foundCard) {
-    //   this.code = this.altArts[0].code;
-    //   this.scanSource = this.altArts[0].source;
-    //   this.cardFromDB = cardCodeDB[this.code];
-    // }
-
-    this.usingPrimarySource = this.scanSource === this.sourcePriorities[0];
-    this.setPreviews();
-  }
-
-  setPreviews() {
-    // const previewSourceKey = `${this.scanSource}Preview`;
-    // this.frontPrev = this.cardFromDB[previewSourceKey].front;
-    this.frontPrev = this.cardFromDB.image_url;
-    // this.backPrev = this.cardFromDB[previewSourceKey].back;
-  }
-
-  cycleAltArt(forward = true) {
-    const codeIndex = this.altArts.findIndex((altArt) => (
-      altArt.code === this.code && altArt.source === this.scanSource));
-    const newIndex = (codeIndex + this.altArts.length + (forward ? 1 : -1)) % this.altArts.length;
-    const newCode = this.altArts[newIndex].code;
-    const newSource = this.altArts[newIndex].source;
-    document.getElementById(`altArtSelect${this.id}`).value = `${newCode}-${newSource}`;
-    this.setCode(newCode, newSource);
-  }
-
-  setCode(code, source) {
-    this.code = code;
-    this.scanSource = source;
-    this.cardFromDB = cardCodeDB[this.code];
-    this.usingPrimarySource = this.scanSource === this.sourcePriorities[0];
-    this.setPreviews();
-    document.getElementById(`previewCard${this.id}`).src = `${IMAGE_BASE_DIR}${this.frontPrev}`;
-
-    if (this.backPrev !== '' && settings.includeCardBacks === 'true') {
-      document.getElementById(`previewCardBack${this.id}`).style.display = '';
-      document.getElementById(`previewCardBackImg${this.id}`).src = `${IMAGE_BASE_DIR}${this.backPrev}`;
-    } else {
-      document.getElementById(`previewCardBack${this.id}`).style.display = 'none';
-      document.getElementById(`previewCardBackImg${this.id}`).src = '';
-    }
-  }
-
-  getPreviewHTML() {
-    let newHtml = '';
-    let imgClass = (this.usingPrimarySource) ? 'card' : 'cardFallback';
-    if (this.typeCode === 'plot') {
-      imgClass += ' rotateLeft';
-    }
-    const frontImgURL = `${this.frontPrev}`;
-    newHtml += `<a href="${NRDB_CARD_DIR}${this.code}" title="" target="NetrunnerCard">`;
-    newHtml += `<img class="${imgClass}" id="previewCard${this.id}" src="${frontImgURL}" alt="${this.code}" />`;
-    newHtml += `<span class="label">${this.code} ${this.title}</span>`;
-    newHtml += '</a>';
-    // let backImgURL = '';
-    // let backImgStyle = 'display: none;';
-    // if (this.backPrev !== '' && settings.includeCardBacks === 'true') {
-    //   backImgURL = `${IMAGE_BASE_DIR}${this.backPrev}`;
-    //   backImgStyle = '';
-    // }
-
-    // newHtml += `<a id="previewCardBack${this.id}" style="${backImgStyle}" href="${NRDB_CARD_DIR}${this.code}" title="" target="NetrunnerCard">`;
-    // newHtml += `<img class="${imgClass}" id="previewCardBackImg${this.id}" src="${backImgURL}" alt="${this.code}back"/>`;
-    // newHtml += `<span class="label">${this.code} ${this.title}</span>`;
-    // newHtml += '</a>';
-
-    return newHtml;
-  }
-
-  getAltArtSelectorHTML() {
-    if (this.altArts.length === 1) {
-      return '';
-    }
-    const sourceLabels = {
-      pt: '(New)',
-      lm: '(Legacy)',
-      de: '(German)',
-    };
-    let selectorHtml = '<li class="list-group-item d-flex justify-content-between align-items-start">';
-    selectorHtml += '<div class="me-2 mt-auto">';
-    selectorHtml += `<button id="cycleLeft${this.id}" type="button" class="btn btn-light btn-sm">`;
-    selectorHtml += '<span class="fas fa-chevron-left"></span>';
-    selectorHtml += '</button></div>';
-    selectorHtml += '<div style="width: 100%">';
-    selectorHtml += this.title;
-    selectorHtml += `<select id="altArtSelect${this.id}" class="form-select form-select-sm">`;
-    this.altArts.forEach((altArt) => {
-      const altCard = cardCodeDB[altArt.code];
-      const selected = (altCard.code === this.code) ? 'selected' : '';
-      selectorHtml += `<option ${selected} value="${altArt.code}-${altArt.source}">${altCard.pack} ${sourceLabels[altArt.source]}</option>`;
-    });
-    selectorHtml += '</select></div>';
-    selectorHtml += '<div class="ms-2 mt-auto">';
-    selectorHtml += `<button id="cycleRight${this.id}" type="button" class="btn btn-light btn-sm">`;
-    selectorHtml += '<span class="fas fa-chevron-right"></span>';
-    selectorHtml += '</button></div></li>';
-    return selectorHtml;
-  }
-
-  getAltArtSelectorEvents() {
-    return {
-      right: () => cardManager.cycleCardAltArt(this.id),
-      left: () => cardManager.cycleCardAltArt(this.id, false),
-      select: (e) => cardManager.setCardCode(this.id, e.target.value),
-    };
-  }
-}
-
-class CardManager {
-  constructor() {
-    this.cardPreview = document.getElementById('cardPreview');
-    this.altArtSelector = document.getElementById('altArtSelector');
-    this.maxCardId = 0;
-    this.cards = {};
-    this.cardIdOrder = [];
-  }
-
-  resetScroll() {
-    this.cardPreview.scroll({
-      top: 0,
-      behavior: 'auto',
-    });
-    this.altArtSelector.scroll({
-      top: 0,
-      behavior: 'auto',
-    });
-  }
-
-  addCard(code, i) {
-    this.maxCardId += 1;
-    this.cards[this.maxCardId] = new Card(code, this.maxCardId);
-    this.cardIdOrder.splice(i, 0, this.maxCardId.toString());
-  }
-
-  cycleCardAltArt(id, forward = true) {
-    this.cards[id].cycleAltArt(forward);
-  }
-
-  setCardCode(id, value) {
-    const [code, source] = value.split('-');
-    this.cards[id].setCode(code, source);
-  }
-
-  setCardPreviewHTML(html) {
-    this.cardPreview.innerHTML = html;
-  }
-
-  buildCardHTML(unfoundCount = 0, unfoundCards = []) {
-    let previewHtml = '';
-    let altArtSelectorHtml = '';
-    this.cardIdOrder.forEach((id) => {
-      const card = this.cards[id];
-      previewHtml += card.getPreviewHTML();
-      //altArtSelectorHtml += card.getAltArtSelectorHTML();
-    });
-    if (unfoundCount > 0) {
-      let unfoundHtml = '<div><p>Entries not found:</p><ul>';
-      unfoundCards.forEach((entry) => {
-        unfoundHtml += `<li>${entry}</li>`;
-      });
-      unfoundHtml += '</ul></div>';
-      previewHtml += unfoundHtml;
-    }
-    this.setCardPreviewHTML(previewHtml);
-    if (altArtSelectorHtml !== '') {
-      altArtSelectorHtml = `<h6>Alt Arts</h6>${altArtSelectorHtml}`;
-    }
-    this.altArtSelector.innerHTML = altArtSelectorHtml;
-    // this.cardIdOrder.forEach((id) => {
-    //   const card = this.cards[id];
-    //   if (card.altArts.length > 1) {
-    //     const events = card.getAltArtSelectorEvents();
-    //     document.getElementById(`cycleLeft${card.id}`).addEventListener('click', events.left);
-    //     document.getElementById(`cycleRight${card.id}`).addEventListener('click', events.right);
-    //     document.getElementById(`altArtSelect${card.id}`).addEventListener('input', events.select);
-    //   }
-    // });
-  }
-
-  updateCardListFromTextArea(cardListText) {
-    const input = cardListText.split(/\n/).filter((e) => (e !== ''));
-    const cardInputRegex = /([0-9] |[0-9]x )?(.*)/;
-    const cardTitles = Object.values(this.cards).map((c) => c.title);
-    const newCardTitles = [];
-    const unfoundCards = [];
-    let unfoundCount = 0;
-
-    input.forEach((entry) => {
-      const match = cardInputRegex.exec(entry);
-      const count = (match[1] === undefined) ? 1 : parseInt(match[1], 10);
-      const cardKey = match[2];
-
-      // This will remove any parenthetical text at the end of the card title
-      // This is necessary because the ThronesDB export includes the set code in the exported text
-      const strippedCardKey = cardKey.replace(/\s*\([^)]*\)\s*$/, '').trim();
-
-      if (cardKey in cardTitleDB) {
-        for (let i = 0; i < count; i += 1) {
-          const cardTitle = cardTitleDB[cardKey].label;
-          newCardTitles.push(cardTitle);
-        }
-      } else if (strippedCardKey in cardTitleDB) {
-        // This check catches cases where the user has included the set code in parentheses
-        // For example for ThronesDB copy/paste: "A Noble Cause (Core)" should match "A Noble Cause"
-        for (let i = 0; i < count; i += 1) {
-          const cardTitle = cardTitleDB[strippedCardKey].label;
-          newCardTitles.push(cardTitle);
-        }
-      } else {
-        unfoundCards.push(entry);
-        unfoundCount += 1;
-      }
-    });
-
-    const IDsOfCardsToRemove = [];
-    const temp = [...newCardTitles];
-    Object.entries(this.cards).forEach(([id, card]) => {
-      if (temp.includes(card.title)) {
-        temp.splice(temp.indexOf(card.title), 1);
-      } else {
-        IDsOfCardsToRemove.push(id);
-      }
-    });
-
-    IDsOfCardsToRemove.forEach((id) => {
-      delete this.cards[id];
-      this.cardIdOrder.splice(this.cardIdOrder.indexOf(id), 1);
-    });
-
-    const cardsToCreate = [];
-    const temp2 = [...cardTitles];
-    newCardTitles.forEach((title, i) => {
-      if (temp2.includes(title)) {
-        temp2.splice(temp2.indexOf(title), 1);
-      } else {
-        cardsToCreate.push({ title, i });
-      }
-    });
-
-    cardsToCreate.forEach(({ title, i }) => {
-      const [code] = cardTitleDB[title].codes;
-      this.addCard(code, i);
-    });
-
-    this.buildCardHTML(unfoundCount, unfoundCards);
-  }
-
-  setCardList(newCards) {
-    this.cards = {};
-    this.cardIdOrder = [];
-    //let count = 0;
-    newCards.forEach((card) => {
-      // Not sure how to deal with quantities yet, so just add one of each card
-      // for (let j = 0; j < card.quantity; j += 1) {
-      //   this.addCard(card.code, count);
-      //   count += 1;
-      // }
-
-      this.addCard(card.code, 1);
-    });
-
-    this.buildCardHTML();
-  }
-
-  updateCardListFromSetSelection(packCode) {
-    let isCoreSet = false;
-    packList.forEach((pack) => {
-      if (pack.pack_code === packCode && pack.is_core) {
-        isCoreSet = true;
-      }
-    });
-
-    const playsetDisplay = document.getElementById('playsetDisplay');
-    if (isCoreSet) {
-      playsetDisplay.style.display = 'block';
-    } else {
-      playsetDisplay.style.display = 'none';
-    }
-
-    const cardList = Object.values(cardCodeDB).filter((card) => (card.pack_code === packCode));
-
-    this.setCardList(cardList);
-  }
-
-  updateCardListFromDecklistURL(url) {
-    const publishedDeckIDRegex = /(\/en\/decklist\/)((?:\w|-)+)/;
-    const unpublishedDeckIDRegex = /(\/deck\/view\/)((?:\w|-)+)/;
-    const publishedMatch = publishedDeckIDRegex.exec(url);
-    const unpublishedMatch = unpublishedDeckIDRegex.exec(url);
-    let deckId;
-    let apiOption;
-
-    if (publishedMatch) {
-      [, , deckId] = publishedMatch;
-      apiOption = 'decklist/';
-    } else if (unpublishedMatch) {
-      [, , deckId] = unpublishedMatch;
-      apiOption = 'deck/';
-    }
-
-    if (deckId) {
-      fetchJson(`${NRDB_API_DIR}${apiOption}${deckId}`)
-        .then((res) => {
-          const newCards = Object.entries(res.data[0].cards)
-            .map(([code, quantity]) => ({ code, quantity }));
-          this.setCardList(newCards);
-        });
-    }
-  }
-
-  getCardList() {
-    return this.cardIdOrder.map((id) => ({
-      code: this.cards[id].code,
-      url: this.cards[id].frontPrev,
-      isPlot: this.cards[id].typeCode === 'plot',
-      // source: this.cards[id].scanSource,
-      // side: this.cards[id].side,
-    }));
-  }
-}
-
 function loadStoredSelections() {
+  const { cardTitleDB, cardCodeDB } = getGlobals();
+
   const storedCardList = localStorage.getItem('cardList');
   if (storedCardList) {
     cardListTextArea.value = storedCardList;
@@ -435,6 +61,8 @@ function loadStoredSelections() {
 }
 
 function populateSetSelection() {
+  const { packList } = getGlobals();
+
   packList.forEach((pack) => {
     const option = document.createElement('option');
     option.setAttribute('value', pack.pack_code);
@@ -455,9 +83,11 @@ function loadOptions() {
 
   fetchJson('https://thronesdb.com/api/public/cards/?v=2.0')
     .then((thronesCards) => {
-      cardTitleDB = adaptCardListToCardTitleDB(thronesCards);
-      cardCodeDB = adaptCardListToCardCodeDB(thronesCards);
-      packList = adaptCardListToPackList(thronesCards);
+      const cardTitleDB = adaptCardListToCardTitleDB(thronesCards);
+      const cardCodeDB = adaptCardListToCardCodeDB(thronesCards);
+      const packList = adaptCardListToPackList(thronesCards);
+
+      setGlobals({ cardTitleDB, cardCodeDB, packList });
 
       loadStoredSelections();
       populateSetSelection();
@@ -533,6 +163,7 @@ function assignEvents() {
 
   document.getElementById('generateBtn')
     .addEventListener('click', () => {
+      const { settings } = getGlobals();
       const generateSettings = {
         sessionID,
         selectedTab,
@@ -615,11 +246,12 @@ document.addEventListener('DOMContentLoaded', () => {
   deckURLText = document.getElementById('deckURLText');
   playsetSelection = document.getElementById('playset-btn-single-set');
 
-  settings = loadSettings(() => {
+  const settings = loadSettings(() => {
     // eslint-disable-next-line no-undef
     const welcomeModal = new bootstrap.Modal(document.getElementById('welcomeModal'), {});
     welcomeModal.show();
   });
+  setGlobals({ settings });
   assignEvents();
   loadOptions();
 });

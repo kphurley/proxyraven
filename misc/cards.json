@@ -1,5 +1,5 @@
 {
-  "imageUrlTemplate": "https://card-images.netrunnerdb.com/v2/large/{code}.jpg",
+  "imageUrlTemplate": "https://card-images.thronesdb.com/v2/large/{code}.jpg",
   "data": [
     {
       "code": "00001",
