@@ -51,6 +51,7 @@
     "eslint": "^7.24.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-import": "^2.22.1",
+    "jsdom": "^25.0.1",
     "vitest": "^3.2.4"
   },
   "engines": {
