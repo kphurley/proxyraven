@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "nf start",
+    "start:production": "nf start -f Procfile.production",
     "lint": "eslint --ignore-path .gitignore .",
     "test": "vitest"
   },
