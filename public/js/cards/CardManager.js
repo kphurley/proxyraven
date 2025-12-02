@@ -67,7 +67,7 @@ export default class CardManager {
   }
 
   updateCardListFromTextArea(cardListText) {
-    const { cardTitleDB, cardCodeDB } = getGlobals();
+    const { cardTitleDB } = getGlobals();
 
     const input = cardListText.split(/\n/).filter((e) => (e !== ''));
     const cardInputRegex = /([0-9] |[0-9]x )?(.*)/;
@@ -213,4 +213,3 @@ export default class CardManager {
     }));
   }
 }
-

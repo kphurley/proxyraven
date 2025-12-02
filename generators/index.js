@@ -3,14 +3,8 @@ const fetch = require('node-fetch');
 const PDFDocument = require('pdfkit');
 const sharp = require('sharp');
 const archiver = require('archiver');
-// eslint-disable-next-line camelcase
-const { card_file, card_printing } = require('../database/models');
 
 const TEMP_IMG_PATH = './tmp/images/';
-
-// This is where we need to grab the high quality images from for downloading
-// This should be somewhere in Digital Ocean instead of Azure
-const IMAGE_BASE_DIR = `${process.env.SPACES_URL}/`;
 
 function cmToPt(cm) {
   return cm * 28.3464566929134;
@@ -37,6 +31,7 @@ function fileDoesNotExists(path, onExistsMsg, job, progressIncrement) {
   return false;
 }
 
+// eslint-disable-next-line no-unused-vars
 async function getFileNames(cardList, includeCardBacks, generateType, lmPlacementType = 'fit') {
   const cardFiles = cardList.map((card) => ({ front: card.url }));
   if (includeCardBacks) {
