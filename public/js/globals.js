@@ -15,4 +15,3 @@ export function setGlobals(updates) {
 export function getGlobals() {
   return globals;
 }
-
